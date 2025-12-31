@@ -1,16 +1,12 @@
 import express from 'express'
 import { supabase } from '../lib/supabase.js'
-
 const router = express.Router()
-
-// 🔐 Simple admin check middleware
 const isAdmin = (req, res, next) => {
   const adminKey = req.headers['x-admin-key']
 
   if (adminKey !== process.env.ADMIN_SECRET_KEY) {
     return res.status(403).json({ error: 'Unauthorized: Admin access required' })
   }
-
   next()
 }
 router.post('/', async (req, res) => {
