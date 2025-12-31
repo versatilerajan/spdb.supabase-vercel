@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from "cors"
 import complaintsRouter from './api/complaints.js'
 import adminRoutes from "./api/admin.js"
 
