@@ -1,13 +1,17 @@
 import express from 'express'
-import { supabase } from './lib/supabase.js'
+import complaintsRouter from './api/complaints.js'
 
 const app = express()
+const PORT = process.env.PORT || 3000
+
+// Middleware to parse JSON
 app.use(express.json())
+app.use('/complaints', complaintsRouter)
 
-app.get('/test', async (req, res) => {
-    const { data, error } = await supabase.from('complaints').select('*')
-    if (error) return res.status(500).json({ error })
-    res.json(data)
+// Optional test endpoint
+app.get('/test', (req, res) => {
+  res.send('Server is running')
 })
-
-app.listen(3000, () => console.log('Server running on http://localhost:3000'))
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`)
+})
