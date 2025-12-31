@@ -1,4 +1,3 @@
-// api/complaints.js
 import express from 'express'
 import { supabase } from '../lib/supabase.js'
 const router = express.Router()
@@ -10,10 +9,12 @@ router.post('/', async (req, res) => {
       complainant_name,
       complainant_phone,
       complainant_address,
-      complain_subject,
+      complaint_subject,
+      complaint_details,   
       incident_date,
       document_link
     } = req.body
+
     const { data, error } = await supabase
       .from('complaints')
       .insert([
@@ -23,7 +24,8 @@ router.post('/', async (req, res) => {
           complainant_name,
           complainant_phone,
           complainant_address,
-          complain_subject,
+          complaint_subject,   
+          complaint_details,   
           incident_date,
           document_link
         }
@@ -31,18 +33,20 @@ router.post('/', async (req, res) => {
 
     if (error) throw error
 
-    res.status(200).json({ message: 'Complaint added successfully', data })
+    res.status(201).json({
+      message: 'Complaint added successfully',
+      data
+    })
   } catch (err) {
     res.status(400).json({ error: err.message })
   }
 })
-
 router.get('/', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('complaints')
       .select('*')
-      .order('incident_date', { ascending: false }) // latest first
+      .order('incident_date', { ascending: false })
 
     if (error) throw error
 
