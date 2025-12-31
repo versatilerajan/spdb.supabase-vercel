@@ -4,29 +4,21 @@ import complaintsRouter from './complaints.js';
 import adminRoutes from './admin.js';
 
 const app = express();
-
-// CORS (your original, explicit for admin panel)
 app.use(cors({
   origin: [
-    'https://adminspdbxfe9e.vercel.app',  // Your admin panel
-    'http://localhost:3000'               // Local dev
+    'https://adminspdbxfe9e.vercel.app',  
+    'http://localhost:3000'              
   ],
   methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
 }));
-
 // Handle preflight
 app.options('*', cors());
-
 // JSON parsing
 app.use(express.json());
-
-// Your routes (no changes)
 app.use('/complaints', complaintsRouter);
 app.use('/admin', adminRoutes);
-
-// Root/test (optional, for / and /test)
 app.get('/', (req, res) => {
   res.json({ message: 'Police Complaint API Ready' });
 });
