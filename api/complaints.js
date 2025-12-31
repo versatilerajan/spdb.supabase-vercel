@@ -48,22 +48,21 @@ router.post('/', async (req, res) => {
     res.status(400).json({ error: err.message })
   }
 })
+router.get("/", async (req, res) => {
+  const { station } = req.query
 
-// GET all complaints
-router.get('/', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('complaints')
-      .select('*')
-      .order('incident_date', { ascending: false })
+  let query = supabase.from("complaints").select("*")
 
-    if (error) throw error
-
-    res.status(200).json(data)
-  } catch (err) {
-    res.status(400).json({ error: err.message })
+  if (station) {
+    query = query.eq("police_station", station)
   }
+
+  const { data, error } = await query.order("incident_date", { ascending: false })
+
+  if (error) return res.status(400).json({ error: error.message })
+  res.json(data)
 })
+
 router.delete('/:id', isAdmin, async (req, res) => {
   try {
     const { id } = req.params
