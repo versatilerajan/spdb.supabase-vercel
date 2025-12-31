@@ -45,11 +45,10 @@ router.post('/', async (req, res) => {
   }
 })
 router.get("/", async (req, res) => {
-  const { station } = req.query
-
+  let { station } = req.query
   let query = supabase.from("complaints").select("*")
-
-  if (station) {
+  if (station && station !== "ALL") {
+    station = station.replace(/([A-Z])/g, " $1").trim()
     query = query.eq("police_station", station)
   }
 
@@ -58,7 +57,6 @@ router.get("/", async (req, res) => {
   if (error) return res.status(400).json({ error: error.message })
   res.json(data)
 })
-
 router.delete('/:id', isAdmin, async (req, res) => {
   try {
     const { id } = req.params
