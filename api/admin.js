@@ -33,43 +33,36 @@ router.post("/login", (req, res) => {
 
 // Get complaints (filtered by station for station admins, all for main)
 router.get("/complaints", async (req, res) => {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "Unauthorized" })
+  const { role, station } = req.query
+  if (!role || !station) {
+    return res.status(401).json({ error: "Missing role or station" })
   }
-  const token = authHeader.split(' ')[1]
-  // In production, validate JWT or session; here assuming token contains role/station
-  // For simplicity, pass role/station in a custom header or query; adjust as needed
-  const { role, station } = req.query // Assume passed after login (e.g., store in session/cookie)
   let query = supabase.from("complaints").select("*").order("created_at", { ascending: false })
   if (role === "STATION" && station) {
-    stationFormatted = station.replace(/([A-Z])/g, " $1").trim()
-    query = query.eq("police_station", stationFormatted)
+    // Match exact station name from frontend select values
+    query = query.eq("police_station", station)
   }
+  // For MAIN (station="ALL"), show all complaints
   const { data, error } = await query
   if (error) return res.status(400).json({ error: error.message })
   res.json(data)
 })
 
-// Update complaint status (admin only)
+// Update complaint status (admin only) - Simplified for now; add auth as needed
 router.put("/complaints/:id/status", async (req, res) => {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "Unauthorized" })
-  }
+  const { role, station } = req.query // Use query params for consistency
   const { id } = req.params
-  const { status, station } = req.body // status: e.g., 'In Progress', 'Resolved'
+  const { status } = req.body // status: e.g., 'In Progress', 'Resolved'
   if (!status) return res.status(400).json({ error: "Status required" })
-  // Validate admin access similar to login (simplified; enhance with proper auth)
-  if (station === "ALL") {
-    // Main admin can update any
-  } else {
-    // Station admin can only update their station's complaints
-    const { data: complaint } = await supabase.from('complaints').select('police_station').eq('id', id).single()
-    if (complaint.police_station !== station.replace(/([A-Z])/g, " $1").trim()) {
-      return res.status(403).json({ error: "Unauthorized to update this complaint" })
-    }
+  if (!role || !station) return res.status(401).json({ error: "Missing role or station" })
+  // Validate admin access
+  let query = supabase.from('complaints').select('police_station').eq('id', id).single()
+  const { data: complaint, error: fetchError } = await query
+  if (fetchError) return res.status(400).json({ error: fetchError.message })
+  if (role === "STATION" && complaint.police_station !== station) {
+    return res.status(403).json({ error: "Unauthorized to update this complaint" })
   }
+  // Main admin (role="MAIN") can update any
   const { error } = await supabase
     .from('complaints')
     .update({ status })
